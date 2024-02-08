@@ -1,0 +1,213 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Vector;
+
+public class GestionTransaction {
+
+    public static void insererDonnees(String valeurColonne1, int valeurColonne2, double valeurColonne3, Connection connexion) {
+        String sql = "INSERT INTO nom_de_ta_table (colonne1, colonne2, colonne3) VALUES (?, ?, ?)";
+        boolean commit = true;
+
+        try {
+            if (connexion == null) {
+                connexion = Connect.obtenirConnexion();
+            }
+
+            // Début de la transaction
+            connexion.setAutoCommit(false);
+
+            try (PreparedStatement preparedStatement = connexion.prepareStatement(sql)) {
+                preparedStatement.setString(1, valeurColonne1);
+                preparedStatement.setInt(2, valeurColonne2);
+                preparedStatement.setDouble(3, valeurColonne3);
+
+                preparedStatement.executeUpdate();
+                System.out.println("Données insérées avec succès");
+            } catch (SQLException e) {
+                commit = false;
+                e.printStackTrace();
+            } finally {
+                // Fin de la transaction
+                if (commit) {
+                    connexion.commit();
+                } else {
+                    connexion.rollback();
+                }
+                connexion.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Vector<Employe> selectAllEmployes(Connection connexion) {
+        Vector<Employe> employes = new Vector<>();
+        String sql = "SELECT * FROM nom_de_ta_table";
+        boolean commit = true;
+
+        try {
+            if (connexion == null) {
+                connexion = Connect.obtenirConnexion();
+            }
+
+            // Début de la transaction
+            connexion.setAutoCommit(false);
+
+            try (PreparedStatement preparedStatement = connexion.prepareStatement(sql);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    int id = resultSet.getInt("id");
+                    String nom = resultSet.getString("nom");
+                    // Ajoute d'autres colonnes selon ta structure de table
+
+                    Employe employe = new Employe(id, nom);
+                    employes.add(employe);
+                }
+
+            } catch (SQLException e) {
+                commit = false;
+                e.printStackTrace();
+            } finally {
+                // Fin de la transaction
+                if (commit) {
+                    connexion.commit();
+                } else {
+                    connexion.rollback();
+                }
+                connexion.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return employes;
+    }
+
+    public static Employe selectEmployeById(int id, Connection connexion) {
+        String sql = "SELECT * FROM nom_de_ta_table WHERE id = ?";
+        Employe employe = null;
+        boolean commit = true;
+
+        try {
+            if (connexion == null) {
+                connexion = Connect.obtenirConnexion();
+            }
+
+            // Début de la transaction
+            connexion.setAutoCommit(false);
+
+            try (PreparedStatement preparedStatement = connexion.prepareStatement(sql)) {
+                preparedStatement.setInt(1, id);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String nom = resultSet.getString("nom");
+                        // Ajoute d'autres colonnes selon ta structure de table
+
+                        employe = new Employe(id, nom);
+                    }
+                }
+            } catch (SQLException e) {
+                commit = false;
+                e.printStackTrace();
+            } finally {
+                // Fin de la transaction
+                if (commit) {
+                    connexion.commit();
+                } else {
+                    connexion.rollback();
+                }
+                connexion.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return employe;
+    }
+
+    public static void updateEmploye(int id, String nouveauNom, Connection connexion) {
+        String sql = "UPDATE nom_de_ta_table SET nom = ? WHERE id = ?";
+        boolean commit = true;
+
+        try {
+            if (connexion == null) {
+                connexion = Connect.obtenirConnexion();
+            }
+
+            // Début de la transaction
+            connexion.setAutoCommit(false);
+
+            try (PreparedStatement preparedStatement = connexion.prepareStatement(sql)) {
+                preparedStatement.setString(1, nouveauNom);
+                preparedStatement.setInt(2, id);
+
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Données mises à jour avec succès");
+                } else {
+                    System.out.println("Aucune ligne mise à jour");
+                }
+            } catch (SQLException e) {
+                commit = false;
+                e.printStackTrace();
+            } finally {
+                // Fin de la transaction
+                if (commit) {
+                    connexion.commit();
+                } else {
+                    connexion.rollback();
+                }
+                connexion.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteEmploye(int id, Connection connexion) {
+        String sql = "DELETE FROM nom_de_ta_table WHERE id = ?";
+        boolean commit = true;
+
+        try {
+            if (connexion == null) {
+                connexion = Connect.obtenirConnexion();
+            }
+
+            // Début de la transaction
+            connexion.setAutoCommit(false);
+
+            try (PreparedStatement preparedStatement = connexion.prepareStatement(sql)) {
+                preparedStatement.setInt(1, id);
+
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Données supprimées avec succès");
+                } else {
+                    System.out.println("Aucune ligne supprimée");
+                }
+            } catch (SQLException e) {
+                commit = false;
+                e.printStackTrace();
+            } finally {
+                // Fin de la transaction
+                if (commit) {
+                    connexion.commit();
+                } else {
+                    connexion.rollback();
+                }
+                connexion.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
